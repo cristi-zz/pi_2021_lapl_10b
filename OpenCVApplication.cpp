@@ -77,6 +77,9 @@ int main()
 		printf(" 2 - Open BMP images from folder\n");
 		printf(" 3 - Color to Gray\n");
 		printf(" 0 - Exit\n\n");
+
+		printf("Test git\n");
+		
 		printf("Option: ");
 		scanf("%d",&op);
 		switch (op)
