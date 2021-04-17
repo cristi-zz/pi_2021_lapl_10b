@@ -109,7 +109,7 @@ void printLevels() {
 
 	reconstructFromLaplace(dst5, dst4, &img);
 
-	imshow("Reconstruct", img);
+	imshow("Reconstructed image", img);
 
 	waitKey();
 }
