@@ -78,9 +78,6 @@ int main()
 		printf(" 3 - Color to Gray\n");
 		printf(" 0 - Exit\n\n");
 
-		printf("Test git");
-
-
 		printf("Option: ");
 		scanf("%d",&op);
 		switch (op)
