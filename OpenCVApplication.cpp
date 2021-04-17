@@ -80,7 +80,7 @@ void laplacianPyramid(Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2) {
 	subtract(src2, l3, *dst2);
 }
 
-void printPyramidLevels() {
+void printLevels() {
 	Mat src, dst1, dst2, dst3;
 	char fname[MAX_PATH];
 	openFileDlg(fname);
@@ -131,7 +131,7 @@ int main()
 				testColor2Gray();
 				break;
 			case 4:
-				printPyramidLevels();
+				printLevels();
 		}
 	}
 	while (op!=0);
