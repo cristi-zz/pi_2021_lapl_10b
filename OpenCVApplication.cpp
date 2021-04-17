@@ -123,7 +123,7 @@ int main()
 		system("cls");
 		destroyAllWindows();
 		printf("Menu:\n");
-		printf(" 1 - Deschidere imagine......\n");
+		printf(" 1 - Deschidere imagine....\n");
 		printf(" 2 - Open BMP images from folder\n");
 		printf(" 3 - Color to Gray\n");
 		printf(" 4 - Show Gaussian & Laplacian levels\n");
