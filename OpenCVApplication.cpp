@@ -80,6 +80,12 @@ void laplacianPyramid(Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2) {
 	subtract(src2, l3, *dst2);
 }
 
+void reconstructFromLaplace(Mat l1, Mat l2, Mat* dst) {
+	Mat m1;
+	pyrUp(l1, m1, Size(l1.rows*2, l1.cols*2));
+	add(m1, l2, *dst);
+}
+
 void printLevels() {
 	Mat src, dst1, dst2, dst3;
 	char fname[MAX_PATH];
@@ -98,6 +104,12 @@ void printLevels() {
 
 	imshow("Laplace 1", dst4);
 	imshow("Laplace 2", dst5);
+
+	Mat img;
+
+	reconstructFromLaplace(dst5, dst4, &img);
+
+	imshow("Reconstruct", img);
 
 	waitKey();
 }
