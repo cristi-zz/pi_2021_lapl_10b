@@ -80,10 +80,12 @@ void laplacianPyramid(Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2) {
 	subtract(src2, l3, *dst2);
 }
 
-void reconstructFromLaplace(Mat l1, Mat l2, Mat* dst) {
-	Mat m1;
-	pyrUp(l1, m1, Size(l1.rows*2, l1.cols*2));
-	add(m1, l2, *dst);
+void reconstructFromLaplace(Mat l1, Mat l2, Mat* dst, Mat mic) {
+	Mat m1, m2, inter;
+	pyrUp(mic, m1, Size(mic.rows * 2, mic.cols * 2));
+	add(m1, l1, inter);
+	pyrUp(inter, m2, Size(l1.rows*2, l1.cols*2));
+	add(m2, l2, *dst);
 }
 
 void printLevels() {
@@ -107,7 +109,7 @@ void printLevels() {
 
 	Mat img;
 
-	reconstructFromLaplace(dst5, dst4, &img);
+	reconstructFromLaplace(dst5, dst4, &img, dst3);
 
 	imshow("Reconstructed image", img);
 
