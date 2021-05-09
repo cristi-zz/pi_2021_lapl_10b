@@ -70,22 +70,25 @@ void gaussianPyramid(Mat src, Mat *dst1, Mat* dst2, Mat* dst3) {
 	pyrDown(*dst2, *dst3, Size(src.rows/8, src.cols/8));
 }
 
-void laplacianPyramid(Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2) {
+void laplacianPyramid(Mat srcO, Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2, Mat* dst3) {
 	Mat l1, l2, l3;
 	pyrUp(src1, l1, Size(src1.rows*2, src1.cols*2));
 	pyrUp(src2, l2, Size(src2.rows*2, src2.cols*2));
 	pyrUp(src3, l3, Size(src3.rows*2, src3.cols*2));
 
+	subtract(srcO, l1, *dst3);
 	subtract(src1, l2, *dst1);
 	subtract(src2, l3, *dst2);
 }
 
-void reconstructFromLaplace(Mat l1, Mat l2, Mat* dst, Mat mic) {
-	Mat m1, m2, inter;
+void reconstructFromLaplace(Mat l1, Mat l2, Mat l3, Mat* dst, Mat mic) {
+	Mat m1, m2, m3,inter1, inter2;
 	pyrUp(mic, m1, Size(mic.rows * 2, mic.cols * 2));
-	add(m1, l1, inter);
-	pyrUp(inter, m2, Size(l1.rows*2, l1.cols*2));
-	add(m2, l2, *dst);
+	add(m1, l1, inter1);
+	pyrUp(inter1, m2, Size(inter1.rows*2, inter1.cols*2));
+	add(m2, l2, inter2);
+	pyrUp(inter2, m3, Size(inter2.rows * 2, inter2.cols * 2));
+	add(m3, l3, *dst);
 }
 
 void printLevels() {
@@ -102,14 +105,15 @@ void printLevels() {
 	
 	Mat dst4, dst5, dst6;
 
-	laplacianPyramid(dst1, dst2, dst3, &dst4, &dst5);
+	laplacianPyramid(src, dst1, dst2, dst3, &dst4, &dst5, &dst6);
 
 	imshow("Laplace 1", dst4);
 	imshow("Laplace 2", dst5);
+	imshow("Laplace 3", dst6);
 
 	Mat img;
 
-	reconstructFromLaplace(dst5, dst4, &img, dst3);
+	reconstructFromLaplace(dst5, dst4, dst6, &img, dst3);
 
 	imshow("Reconstructed image", img);
 
