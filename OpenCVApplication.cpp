@@ -167,8 +167,8 @@ int main()
 		printf(" 1 - Deschidere imagine....\n");
 		printf(" 2 - Open BMP images from folder\n");
 		printf(" 3 - Color to Gray\n");
-		printf(" 4 - Arata nivelele de Gaussian & Laplacian.\n");
-		printf(" 5 - Alipire\n");
+		printf(" 4 - Arata nivelele de Gaussian & Laplacian\n");
+		printf(" 5 - Alipirea a doua imagini\n");
 		printf(" 0 - Exit\n\n");
 
 		printf("Option: ");
