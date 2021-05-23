@@ -8,11 +8,11 @@
 void testOpenImage()
 {
 	char fname[MAX_PATH];
-	while(openFileDlg(fname))
+	while (openFileDlg(fname))
 	{
 		Mat src;
 		src = imread(fname);
-		imshow("opened image",src);
+		imshow("opened image", src);
 		waitKey();
 	}
 }
@@ -20,16 +20,16 @@ void testOpenImage()
 void testOpenImagesFld()
 {
 	char folderName[MAX_PATH];
-	if (openFolderDlg(folderName)==0)
+	if (openFolderDlg(folderName) == 0)
 		return;
 	char fname[MAX_PATH];
-	FileGetter fg(folderName,"bmp");
-	while(fg.getNextAbsFile(fname))
+	FileGetter fg(folderName, "bmp");
+	while (fg.getNextAbsFile(fname))
 	{
 		Mat src;
 		src = imread(fname);
-		imshow(fg.getFoundFileName(),src);
-		if (waitKey()==27) //ESC pressed
+		imshow(fg.getFoundFileName(), src);
+		if (waitKey() == 27) //ESC pressed
 			break;
 	}
 }
@@ -37,7 +37,7 @@ void testOpenImagesFld()
 void testColor2Gray()
 {
 	char fname[MAX_PATH];
-	while(openFileDlg(fname))
+	while (openFileDlg(fname))
 	{
 		Mat_<Vec3b> src = imread(fname, IMREAD_COLOR);
 
@@ -46,74 +46,109 @@ void testColor2Gray()
 
 		Mat_<uchar> dst(height, width);
 
-		for (int i=0; i<height; i++)
+		for (int i = 0; i < height; i++)
 		{
-			for (int j=0; j<width; j++)
+			for (int j = 0; j < width; j++)
 			{
-				Vec3b v3 = src(i,j);
+				Vec3b v3 = src(i, j);
 				uchar b = v3[0];
 				uchar g = v3[1];
 				uchar r = v3[2];
-				dst(i,j) = (r+g+b)/3;
+				dst(i, j) = (r + g + b) / 3;
 			}
 		}
-		
-		imshow("original image",src);
-		imshow("gray image",dst);
+
+		imshow("original image", src);
+		imshow("gray image", dst);
 		waitKey();
 	}
 }
 
-void gaussianPyramid(Mat src, Mat *dst1, Mat* dst2, Mat* dst3) {
-	pyrDown(src, *dst1, Size(src.rows/2, src.cols/2));
-	pyrDown(*dst1, *dst2, Size(src.rows/4, src.cols/4));
-	pyrDown(*dst2, *dst3, Size(src.rows/8, src.cols/8));
+std::vector<Mat> gaussianPyramid(Mat src, int n) {
+	std::vector<Mat> mat;
+	Mat src2 = src.clone();
+	mat.push_back(src);
+	Mat dst;
+	int x = 2;
+	for (int i = 0; i < n; i++) {
+		pyrDown(src2, dst, Size(src.rows / x, src.cols / x));
+		mat.push_back(dst);
+		src2 = dst.clone();
+		x *= 2;
+	}
+
+	return mat;
 }
 
-void laplacianPyramid(Mat srcO, Mat src1, Mat src2, Mat src3, Mat* dst1, Mat* dst2, Mat* dst3) {
-	Mat l1, l2, l3;
-	pyrUp(src1, l1, Size(src1.rows*2, src1.cols*2));
-	pyrUp(src2, l2, Size(src2.rows*2, src2.cols*2));
-	pyrUp(src3, l3, Size(src3.rows*2, src3.cols*2));
+std::vector<Mat> laplacianPyramid(std::vector<Mat> mat) {
+	std::vector<Mat> mat_dst;
+	Mat l, dst;
+	for (int i = (mat.size() - 1); i > 0; i--) {
+		pyrUp(mat[i], l, Size(mat[i].rows * 2, mat[i].cols * 2));
+		subtract(mat[i - 1], l, dst);
+		mat_dst.push_back(dst);
+	}
 
-	subtract(srcO, l1, *dst3);
-	subtract(src1, l2, *dst1);
-	subtract(src2, l3, *dst2);
+	return mat_dst;
 }
 
-void reconstructFromLaplace(Mat l1, Mat l2, Mat l3, Mat* dst, Mat mic) {
-	Mat m1, m2, m3,inter1, inter2;
-	pyrUp(mic, m1, Size(mic.rows * 2, mic.cols * 2));
-	add(m1, l1, inter1);
-	pyrUp(inter1, m2, Size(inter1.rows*2, inter1.cols*2));
-	add(m2, l2, inter2);
-	pyrUp(inter2, m3, Size(inter2.rows * 2, inter2.cols * 2));
-	add(m3, l3, *dst);
+Mat reconstructFromLaplace(std::vector<Mat> gaussian, std::vector<Mat> laplacian) {
+	Mat g, ls;
+	pyrUp(gaussian[1], g, Size(gaussian[1].rows * 2, gaussian[1].cols * 2));
+	add(g, laplacian[laplacian.size() - 1], ls);
+	//Mat ls = mat[0], aux;
+	/*for (int i = 1; i < mat.size(); i++) {
+		pyrUp(ls, aux, Size(ls.rows * 2, ls.cols * 2));
+		add(aux, mat[i], ls);
+	}*/
+
+	return ls;
+}
+
+void alipire() {
+	char fname[MAX_PATH];
+	openFileDlg(fname);
+	Mat img1 = imread(fname, IMREAD_GRAYSCALE);
+	openFileDlg(fname);
+	Mat img2 = imread(fname, IMREAD_GRAYSCALE);
+
+	Mat dst = img1.clone();
+
+	for (int i = 0; i < img2.rows; i++) {
+		for (int j = img2.cols / 2; j < img2.cols; j++) {
+			dst.at<uchar>(i, j) = img2.at<uchar>(i, j);
+		}
+	}
+
+	imshow("Imagini alipite", dst);
+
+	waitKey();
 }
 
 void printLevels() {
-	Mat src, dst1, dst2, dst3;
+	int n;
+	printf("Levels: ");
+	scanf("%d", &n);
+	Mat src;
 	char fname[MAX_PATH];
 	openFileDlg(fname);
 	src = imread(fname, IMREAD_GRAYSCALE);
-	gaussianPyramid(src, &dst1, &dst2, &dst3);
 
 	imshow("Original image", src);
-	imshow("Gaussian 1", dst1);
-	imshow("Gaussian 2", dst2);
-	imshow("Gaussian 3", dst3);
-	
-	Mat dst4, dst5, dst6;
 
-	laplacianPyramid(src, dst1, dst2, dst3, &dst4, &dst5, &dst6);
+	std::vector<Mat> gaussian = gaussianPyramid(src, n);
 
-	imshow("Laplace 1", dst4);
-	imshow("Laplace 2", dst5);
-	imshow("Laplace 3", dst6);
+	for (int i = 0; i < gaussian.size(); i++) {
+		imshow("Gaussian", gaussian[i]);
+	}
 
-	Mat img;
+	std::vector<Mat> laplacian = laplacianPyramid(gaussian);
 
-	reconstructFromLaplace(dst5, dst4, dst6, &img, dst3);
+	for (int i = 0; i < laplacian.size(); i++) {
+		imshow("Laplace", laplacian[i]);
+	}
+
+	Mat img = reconstructFromLaplace(gaussian, laplacian);
 
 	imshow("Reconstructed image", img);
 
@@ -132,26 +167,30 @@ int main()
 		printf(" 1 - Deschidere imagine....\n");
 		printf(" 2 - Open BMP images from folder\n");
 		printf(" 3 - Color to Gray\n");
-		printf(" 4 - Show Gaussian & Laplacian levels\n");
+		printf(" 4 - Arata nivelele Gaussian & Laplacian\n");
+		printf(" 5 - Alipire\n");
 		printf(" 0 - Exit\n\n");
 
 		printf("Option: ");
-		scanf("%d",&op);
+		scanf("%d", &op);
 		switch (op)
 		{
-			case 1:
-				testOpenImage();
-				break;
-			case 2:
-				testOpenImagesFld();
-				break;
-			case 3:
-				testColor2Gray();
-				break;
-			case 4:
-				printLevels();
+		case 1:
+			testOpenImage();
+			break;
+		case 2:
+			testOpenImagesFld();
+			break;
+		case 3:
+			testColor2Gray();
+			break;
+		case 4:
+			printLevels();
+			break;
+		case 5:
+			alipire();
+			break;
 		}
-	}
-	while (op!=0);
+	} while (op != 0);
 	return 0;
 }
