@@ -92,10 +92,16 @@ std::vector<Mat> laplacianPyramid(std::vector<Mat> mat) {
 	return mat_dst;
 }
 
-Mat reconstructFromLaplace(std::vector<Mat> gaussian, std::vector<Mat> laplacian) {
-	Mat g, ls;
-	pyrUp(gaussian[1], g, Size(gaussian[1].rows * 2, gaussian[1].cols * 2));
-	add(g, laplacian[laplacian.size() - 1], ls);
+std::vector<Mat> reconstructFromLaplace(std::vector<Mat> gaussian, std::vector<Mat> laplacian) {
+	Mat g, aux;
+	std::vector<Mat> ls;
+	int i = 1;
+	while( i <= laplacian.size()) {
+		pyrUp(gaussian[i], g, Size(gaussian[i].rows * 2, gaussian[i].cols * 2));
+		add(g, laplacian[laplacian.size() - i], aux);
+		ls.push_back(aux);
+		i++;
+	}
 	//Mat ls = mat[0], aux;
 	/*for (int i = 1; i < mat.size(); i++) {
 		pyrUp(ls, aux, Size(ls.rows * 2, ls.cols * 2));
@@ -105,6 +111,22 @@ Mat reconstructFromLaplace(std::vector<Mat> gaussian, std::vector<Mat> laplacian
 	return ls;
 }
 
+void diferenta(Mat reconstructed, Mat original) {
+	Mat diferenta = original.clone();
+	for (int i = 0; i < reconstructed.rows; i++)
+		for (int j = 0; j < reconstructed.cols; j++)
+			diferenta.at<uchar>(i,j) = abs(original.at<uchar>(i, j) - reconstructed.at<uchar>(i, j));
+	float medie = 0.0;
+	for (int i = 0; i < reconstructed.rows; i++)
+		for (int j = 0; j < reconstructed.cols; j++)
+			medie += diferenta.at<uchar>(i, j);
+	
+	medie = medie / (float)(reconstructed.rows * reconstructed.cols);
+	printf("Media: %f\n", medie);
+
+	waitKey();
+}
+
 void alipire() {
 	char fname[MAX_PATH];
 	openFileDlg(fname);
@@ -112,7 +134,44 @@ void alipire() {
 	openFileDlg(fname);
 	Mat img2 = imread(fname, IMREAD_GRAYSCALE);
 
-	Mat dst = img1.clone();
+	int n;
+	printf("Levels: ");
+	scanf("%d", &n);
+
+	imshow("Original image1", img1);
+	imshow("Original image2", img2);
+
+	std::vector<Mat> gaussian1 = gaussianPyramid(img1, n);
+	std::vector<Mat> gaussian2 = gaussianPyramid(img2, n);
+
+
+	std::vector<Mat> laplacian1 = laplacianPyramid(gaussian1);
+	std::vector<Mat> laplacian2 = laplacianPyramid(gaussian2);
+
+	std::vector<Mat> combinatGaussian = gaussianPyramid(img1, n);
+	std::vector<Mat> combinatLaplacian = laplacianPyramid(gaussian1);
+
+
+	for (int i = 0; i < gaussian1.size(); i++)
+		for (int j = 0; j < gaussian1[i].rows; j++)
+			for (int k = gaussian1[i].cols / 2; k < gaussian1[i].cols; k++)
+				combinatGaussian[i].at<uchar>(j, k) = gaussian2[i].at<uchar>(j, k);
+
+	for (int i = 0; i < laplacian1.size(); i++)
+		for (int j = 0; j < laplacian1[i].rows; j++)
+			for (int k = laplacian1[i].cols / 2; k < laplacian1[i].cols; k++)
+				combinatLaplacian[i].at<uchar>(j, k) = laplacian2[i].at<uchar>(j, k);
+
+
+	std::vector<Mat> img = reconstructFromLaplace(combinatGaussian, combinatLaplacian);
+	imshow("Reconstructed image", img[0]);
+	waitKey();
+
+
+
+	/*Mat dst = img1.clone();
+
+
 
 	for (int i = 0; i < img2.rows; i++) {
 		for (int j = img2.cols / 2; j < img2.cols; j++) {
@@ -120,39 +179,44 @@ void alipire() {
 		}
 	}
 
-	imshow("Imagini alipite", dst);
-
-	waitKey();
+	//imshow("Imagini alipite", dst);
+	return dst;
+	waitKey();*/
 }
 
-void printLevels() {
-	int n;
-	printf("Levels: ");
-	scanf("%d", &n);
+Mat citire() {
 	Mat src;
 	char fname[MAX_PATH];
 	openFileDlg(fname);
 	src = imread(fname, IMREAD_GRAYSCALE);
+	return src;
+}
+
+Mat constructLevels(Mat src) {
+	int n;
+	printf("Levels: ");
+	scanf("%d", &n);
 
 	imshow("Original image", src);
 
 	std::vector<Mat> gaussian = gaussianPyramid(src, n);
 
 	for (int i = 0; i < gaussian.size(); i++) {
-		imshow("Gaussian", gaussian[i]);
+
+		imshow("Gaussian" + std::to_string(i), gaussian[i]);
 	}
 
 	std::vector<Mat> laplacian = laplacianPyramid(gaussian);
 
 	for (int i = 0; i < laplacian.size(); i++) {
-		imshow("Laplace", laplacian[i]);
+		imshow("Laplace" + std::to_string(i), laplacian[i]);
 	}
 
-	Mat img = reconstructFromLaplace(gaussian, laplacian);
+	std::vector<Mat> img = reconstructFromLaplace(gaussian, laplacian);
+	int x = laplacian.size();
+	imshow("Reconstructed image", img[0]);
 
-	imshow("Reconstructed image", img);
-
-	waitKey();
+	return img[0];
 }
 
 
@@ -169,6 +233,7 @@ int main()
 		printf(" 3 - Color to Gray\n");
 		printf(" 4 - Arata nivelele de Gaussian & Laplacian\n");
 		printf(" 5 - Alipirea a doua imagini\n");
+		printf(" 6 - Diferenta\n");
 		printf(" 0 - Exit\n\n");
 
 		printf("Option: ");
@@ -184,13 +249,19 @@ int main()
 		case 3:
 			testColor2Gray();
 			break;
-		case 4:
-			printLevels();
-			break;
-		case 5:
+		case 4: {
+			Mat src1 = citire();
+			constructLevels(src1);
+			break; }
+		case 5: 
 			alipire();
-			break;
+			break; 
+		case 6: {
+			Mat src1 = citire();
+			diferenta(src1, constructLevels(src1));
+			break; }
 		}
+
 	} while (op != 0);
 	return 0;
 }
