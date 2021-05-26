@@ -111,7 +111,7 @@ std::vector<Mat> reconstructFromLaplace(std::vector<Mat> gaussian, std::vector<M
 	return ls;
 }
 
-void diferenta(Mat reconstructed, Mat original) {
+void media(Mat reconstructed, Mat original) {
 	Mat diferenta = original.clone();
 	for (int i = 0; i < reconstructed.rows; i++)
 		for (int j = 0; j < reconstructed.cols; j++)
@@ -192,7 +192,7 @@ Mat citire() {
 	return src;
 }
 
-Mat constructLevels(Mat src) {
+Mat reconstructImage(Mat src) {
 	int n;
 	printf("Levels: ");
 	scanf("%d", &n);
@@ -231,9 +231,9 @@ int main()
 		printf(" 1 - Deschidere imagine....\n");
 		printf(" 2 - Open BMP images from folder\n");
 		printf(" 3 - Color to Gray\n");
-		printf(" 4 - Arata nivelele de Gaussian & Laplacian\n");
+		printf(" 4 - Calculeaza Gaussian & Laplacian & reface imaginea\n");
 		printf(" 5 - Alipirea a doua imagini\n");
-		printf(" 6 - Diferenta\n");
+		printf(" 6 - Afiseaza media erorilor, nivelele Gaussian & Laplacian & reface imaginea\n");
 		printf(" 0 - Exit\n\n");
 
 		printf("Option: ");
@@ -251,14 +251,14 @@ int main()
 			break;
 		case 4: {
 			Mat src1 = citire();
-			constructLevels(src1);
+			reconstructImage(src1);
 			break; }
 		case 5: 
 			alipire();
 			break; 
 		case 6: {
 			Mat src1 = citire();
-			diferenta(src1, constructLevels(src1));
+			media(src1, reconstructImage(src1));
 			break; }
 		}
 
